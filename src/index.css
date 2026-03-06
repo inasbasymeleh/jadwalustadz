@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@keyframes draw-icon {
+  0% {
+    stroke-dasharray: 500;
+    stroke-dashoffset: 500;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dasharray: 500;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.animate-draw path, .animate-draw line, .animate-draw polyline, .animate-draw polygon, .animate-draw circle, .animate-draw rect {
+  animation: draw-icon 3s ease-out forwards;
+}
+
+:root {
+  --app-primary: #C2A878;
+  --app-primary-dark: #A68A59;
+  --app-primary-light: #F9F6F0;
+}
+
+.dark {
+  --app-primary: #8A9A73; /* Darker Sage Green */
+  --app-primary-dark: #6B7B54;
+  --app-primary-light: #1E2D28;
+}
+
+@theme {
+  --color-gold-primary: var(--app-primary);
+  --color-gold-dark: var(--app-primary-dark);
+  --color-gold-light: var(--app-primary-light);
+  
+  --color-dark-bg: #0F1714;
+  --color-dark-card: #16221E;
+  --color-dark-border: #1E2D28;
+  --color-dark-shadow: #080C0A;
+  --color-dark-text: #FDFBF7;
+}
+
+@layer components {
+  .btn-timbul {
+    @apply bg-gold-primary text-white font-semibold py-3 px-6 rounded-xl shadow-[0_4px_0_var(--color-gold-dark)] active:shadow-[0_0px_0_var(--color-gold-dark)] active:translate-y-1 transition-all;
+  }
+  .card-timbul {
+    @apply bg-white dark:bg-dark-card rounded-2xl shadow-[0_6px_0_rgba(0,0,0,0.05)] dark:shadow-[0_6px_0_rgba(0,0,0,0.3)] border border-gray-100 dark:border-dark-border p-5;
+  }
+  .card-primary-timbul {
+    @apply bg-gold-primary dark:bg-dark-card text-white rounded-2xl shadow-[0_6px_0_var(--color-gold-dark)] dark:shadow-[0_6px_0_var(--color-dark-shadow)] p-5 transition-colors duration-200;
+  }
+}
+
+body {
+  @apply bg-[#FAFAFA] dark:bg-dark-bg text-gray-800 dark:text-dark-text transition-colors duration-200;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  @apply transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98];
+}

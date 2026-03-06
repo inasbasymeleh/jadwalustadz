@@ -1,0 +1,106 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - profile: map (optional) - User's profile information
+    //     - name: string (optional, max 100 chars)
+    //     - photo: string (optional, max 1000 chars)
+    //     - title: string (optional, max 50 chars)
+    //   - customCategories: list (optional, max 50 items) - User's custom categories
+    //     - name: string (max 50 chars)
+    //     - defaultTime: string (max 10 chars)
+    //   - schedules: list (optional, max 1000 items) - User's schedules
+    //     - id: string (max 50 chars)
+    //     - category: string (max 50 chars)
+    //     - masjid: string (max 100 chars)
+    //     - date: string (max 20 chars)
+    //     - time: string (max 10 chars)
+    //     - topic: string (max 200 chars)
+    //     - status: string (max 20 chars)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+       return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+       return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidStringLength(str, minLen, maxLen) {
+      return str is string && str.size() >= minLen && str.size() <= maxLen;
+    }
+
+    function isValidProfile(profile) {
+      return profile == null || (
+        profile is map &&
+        (!('name' in profile) || isValidStringLength(profile.name, 0, 100)) &&
+        (!('photo' in profile) || profile.photo == null || isValidStringLength(profile.photo, 0, 1000000)) && // Base64 images can be large
+        (!('title' in profile) || isValidStringLength(profile.title, 0, 50))
+      );
+    }
+
+    function isValidCustomCategory(category) {
+      return category is map &&
+             ('name' in category && isValidStringLength(category.name, 1, 50)) &&
+             ('defaultTime' in category && isValidStringLength(category.defaultTime, 1, 10));
+    }
+
+    function isValidCustomCategories(categories) {
+      return categories == null || (
+        categories is list &&
+        categories.size() <= 50
+        // Ideally we would validate each item, but Firestore rules have limits on list iteration.
+        // For a simple app, checking the size is a good start to prevent abuse.
+      );
+    }
+
+    function isValidSchedule(schedule) {
+      return schedule is map &&
+             ('id' in schedule && isValidStringLength(schedule.id, 1, 50)) &&
+             ('category' in schedule && isValidStringLength(schedule.category, 0, 50)) &&
+             ('masjid' in schedule && isValidStringLength(schedule.masjid, 1, 100)) &&
+             ('date' in schedule && isValidStringLength(schedule.date, 1, 20)) &&
+             ('time' in schedule && isValidStringLength(schedule.time, 1, 10)) &&
+             ('topic' in schedule && isValidStringLength(schedule.topic, 0, 200)) &&
+             ('status' in schedule && isValidStringLength(schedule.status, 1, 20));
+    }
+
+    function isValidSchedules(schedules) {
+      return schedules == null || (
+        schedules is list &&
+        schedules.size() <= 1000
+      );
+    }
+
+    function isValidUserDoc(data) {
+      return (!('profile' in data) || isValidProfile(data.profile)) &&
+             (!('customCategories' in data) || isValidCustomCategories(data.customCategories)) &&
+             (!('schedules' in data) || isValidSchedules(data.schedules));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      // Users can only read and write their own documents
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserDoc(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserDoc(request.resource.data);
+      allow delete: if isOwner(userId);
+    }
+  }
+}

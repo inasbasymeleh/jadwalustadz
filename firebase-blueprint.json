@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "profile": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string", "description": "User's display name" },
+            "photo": { "type": "string", "description": "User's photo URL" },
+            "title": { "type": "string", "description": "User's title (e.g., Ustadz)" }
+          }
+        },
+        "customCategories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "defaultTime": { "type": "string" }
+            }
+          }
+        },
+        "schedules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "category": { "type": "string" },
+              "masjid": { "type": "string" },
+              "date": { "type": "string" },
+              "time": { "type": "string" },
+              "topic": { "type": "string" },
+              "status": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profiles and their schedules"
+    }
+  }
+}
